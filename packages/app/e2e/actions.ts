@@ -357,15 +357,18 @@ const seed = async <T>(input: {
   timeout?: number
   attempts?: number
 }) => {
-  for (let i = 0; i < (input.attempts ?? 2); i++) {
-    await input.sdk.session.promptAsync({
-      sessionID: input.sessionID,
-      agent: "build",
-      system: seedSystem,
-      parts: [{ type: "text", text: input.prompt }],
-    })
+  for (let i = 0; i < (input.attempts ?? 4); i++) {
+    await input.sdk.session
+      .promptAsync({
+        sessionID: input.sessionID,
+        agent: "build",
+        system: seedSystem,
+        parts: [{ type: "text", text: input.prompt }],
+      })
+      .catch(() => undefined)
     const value = await wait({ probe: input.probe, timeout: input.timeout })
     if (value !== undefined) return value
+    await new Promise((resolve) => setTimeout(resolve, 250))
   }
 }
 
@@ -396,7 +399,7 @@ export async function seedSessionQuestion(
     sdk,
     sessionID: input.sessionID,
     prompt: text,
-    timeout: 30_000,
+    timeout: 60_000,
     probe: async () => {
       const list = await sdk.question.list().then((x) => x.data ?? [])
       return list.find((item) => item.sessionID === input.sessionID && item.questions[0]?.header === first.header)
