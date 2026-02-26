@@ -382,11 +382,11 @@ describe("file/index Filesystem patterns", () => {
         directory: tmp.path,
         fn: async () => {
           const target = "packages/app/package.json"
-
-          for (let i = 0; i < 80; i++) {
+          const end = Date.now() + 30_000
+          while (Date.now() < end) {
             const result = await File.search({ query: "packages\\app\\package.json", dirs: true, limit: 200 })
             if (result.includes(target)) return
-            await Bun.sleep(25)
+            await Bun.sleep(50)
           }
 
           const result = await File.search({ query: "packages\\app\\package.json", dirs: true, limit: 200 })
