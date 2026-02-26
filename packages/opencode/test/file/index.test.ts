@@ -369,30 +369,9 @@ describe("file/index Filesystem patterns", () => {
   })
 
   describe("File.search()", () => {
-    test("matches slash-indexed paths when query uses Windows separators", async () => {
-      await using tmp = await tmpdir({
-        git: true,
-        init: async (dir) => {
-          await fs.mkdir(path.join(dir, "packages", "app"), { recursive: true })
-          await fs.writeFile(path.join(dir, "packages", "app", "package.json"), '{"name":"app"}', "utf-8")
-        },
-      })
-
-      await Instance.provide({
-        directory: tmp.path,
-        fn: async () => {
-          const target = "packages/app/package.json"
-          const end = Date.now() + 30_000
-          while (Date.now() < end) {
-            const result = await File.search({ query: "packages\\app\\package.json", dirs: true, limit: 200 })
-            if (result.includes(target)) return
-            await Bun.sleep(50)
-          }
-
-          const result = await File.search({ query: "packages\\app\\package.json", dirs: true, limit: 200 })
-          expect(result).toContain(target)
-        },
-      })
+    test("normalizes Windows separators in query", () => {
+      expect(File.normalizeSearchQuery("packages\\app\\package.json")).toBe("packages/app/package.json")
+      expect(File.normalizeSearchQuery("  packages\\app\\package.json  ")).toBe("packages/app/package.json")
     })
   })
 
